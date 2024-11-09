@@ -102,8 +102,6 @@ class TradingEnvironment:
         self.ema5 = data['ema5'].values
         self.ema8 = data['ema8'].values
         self.ema100 = data['ema100'].values
-        self.slope_symbolused = data['symbolused_slope']
-        self.slope_rsi = data['slope_rsi14']
 
     def reset(self):
         self.balance = 20
@@ -131,11 +129,11 @@ class TradingEnvironment:
 
         step = 1
 
-        if action == 1 and ema5_prev < ema8_prev and ema5_current>ema8_current and self.slope_rsi[self.current_step]>0 and self.slope_symbolused[self.current_step]<0:
+        if action == 1 and ema5_prev > ema100_prev and ema8_prev < ema100_prev and ema8_current> ema100_current and ema5_current>ema100_current and price > self.open_price[self.current_step]:
             loss_pct = 0.03
-            gain_pct = 0.20
-            stop_loss = ema8_current
-            leverage = abs(loss_pct/((stop_loss - price)/price))
+            gain_pct = 0.15
+            stop_loss = ema100_current
+            leverage = abs(loss_pct / ((stop_loss - price) / price))
             tp_limit = ((gain_pct * price) / abs(-loss_pct / ((stop_loss - price) / price))) + price
             self.action_list.append(action)
 
@@ -160,10 +158,11 @@ class TradingEnvironment:
                 else:
                     step = len(a) + 1
 
-        elif action == -1 and ema5_prev>ema8_prev and ema5_current<ema8_current and self.slope_rsi[self.current_step]<0 and self.slope_symbolused[self.current_step]>0:
+        elif action == -1 and ema5_prev < ema100_prev and ema8_prev > ema100_prev and ema8_current< ema100_current and ema5_current<ema100_current and price < self.open_price[
+            self.current_step]:
             loss_pct = 0.03
-            gain_pct = 0.20
-            stop_loss = ema8_current
+            gain_pct = 0.15
+            stop_loss = ema100_current
             leverage = abs(loss_pct / ((stop_loss - price) / price))
             tp_limit = ((-gain_pct * price) / abs(loss_pct / ((stop_loss - price) / price))) + price
             self.action_list.append(action)
@@ -176,13 +175,13 @@ class TradingEnvironment:
                 if low <= tp_limit:  # Take Profit hit for sell
                     step = len(a) + 1
                     self.balance += self.balance * gain_pct
-                    self.profits.append(sum(self.profits) * gain_pct - (sum(self.profits)*leverage*0.0005*2))
+                    self.profits.append(sum(self.profits)*gain_pct - (sum(self.profits)*leverage*0.0005*2))
                     self.winloss.append(1)
                     break
                 elif high >= stop_loss:  # Stop Loss hit for sell
                     step = len(a) + 1
                     self.balance -= self.balance * loss_pct
-                    self.profits.append(-sum(self.profits) * loss_pct - (sum(self.profits)*leverage*0.0005*2))
+                    self.profits.append(-sum(self.profits)*loss_pct - (sum(self.profits)*leverage*0.0005*2))
                     self.winloss.append(-1)
                     break
                 else:
