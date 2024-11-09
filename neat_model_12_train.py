@@ -383,7 +383,7 @@ def run_neat(config_path):
     p.add_reporter(stats)
 
     # Run for a certain number of generations
-    winner = p.run(evaluate_genome, 400)
+    winner = p.run(evaluate_genome, 200)
     print('\nBest genome:\n{!s}'.format(winner))
 
 
